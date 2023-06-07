@@ -3,7 +3,7 @@
 #include <stdio.h>
 %}
 
-%token IDENT MAIS MENOS OR ASTERISCO DIV ABRE_PARENTESES FECHA_PARENTESES
+%token IDENT MAIS MENOS OR AND ASTERISCO DIV
 
 %%
 
@@ -26,7 +26,7 @@ fator      : IDENT {printf ("A"); } |
 
 %%
 
-main (int argc, char** argv) {
+int main (int argc, char** argv) {
    yyparse();
    printf("\n");
 }
