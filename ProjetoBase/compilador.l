@@ -51,31 +51,31 @@ program { simbolo  = simb_program;
           return PROGRAM;
 }
 
-label { simbolo  = simb_label;
+label {   simbolo  = simb_label;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("label ");
           return LABEL;
 }
 
-type { simbolo  = simb_type;
+type {    simbolo  = simb_type;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("type ");
           return TYPE;
 }
 
-array { simbolo  = simb_array;
+array {   simbolo  = simb_array;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("array ");
           return ARRAY;
 }
 
-of { simbolo  = simb_of;
+of {      simbolo  = simb_of;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" of ");
           return OF;
 }
 
-var { simbolo = simb_var;
+var {     simbolo = simb_var;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("var ");
           return VAR;
@@ -93,31 +93,31 @@ function { simbolo  = simb_function;
           return FUNCTION;
 }
 
-goto { simbolo  = simb_goto;
+goto {    simbolo  = simb_goto;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("goto ");
           return GOTO;
 }
 
-if { simbolo  = simb_if;
+if {      simbolo  = simb_if;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("if ");
           return IF;
 }
 
-then { simbolo  = simb_then;
+then {    simbolo  = simb_then;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" then ");
           return THEN;
 }
 
-else { simbolo  = simb_else;
+else {    simbolo  = simb_else;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("else ");
           return ELSE;
 }
 
-while { simbolo  = simb_while;
+while {   simbolo  = simb_while;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("while ");
           return WHILE;

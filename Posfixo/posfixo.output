@@ -1,0 +1,204 @@
+Nonterminals useless in grammar
+
+    operadores
+
+
+Terminals unused in grammar
+
+    OR
+    AND
+
+
+Rules useless in grammar
+
+    9 operadores: expr AND termo
+   10           | expr OR termo
+   11           | ε
+
+
+Grammar
+
+    0 $accept: expr $end
+
+    1 expr: expr MAIS termo
+    2     | expr MENOS termo
+    3     | termo
+
+    4 termo: termo ASTERISCO fator
+    5      | termo DIV fator
+    6      | fator
+
+    7 fator: IDENTA
+    8      | IDENTB
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    IDENTA (258) 7
+    IDENTB (259) 8
+    MAIS (260) 1
+    MENOS (261) 2
+    OR (262)
+    AND (263)
+    ASTERISCO (264) 4
+    DIV (265) 5
+
+
+Nonterminals, with rules where they appear
+
+    $accept (11)
+        on left: 0
+    expr (12)
+        on left: 1 2 3
+        on right: 0 1 2
+    termo (13)
+        on left: 4 5 6
+        on right: 1 2 3 4 5
+    fator (14)
+        on left: 7 8
+        on right: 4 5 6
+
+
+State 0
+
+    0 $accept: • expr $end
+
+    IDENTA  shift, and go to state 1
+    IDENTB  shift, and go to state 2
+
+    expr   go to state 3
+    termo  go to state 4
+    fator  go to state 5
+
+
+State 1
+
+    7 fator: IDENTA •
+
+    $default  reduce using rule 7 (fator)
+
+
+State 2
+
+    8 fator: IDENTB •
+
+    $default  reduce using rule 8 (fator)
+
+
+State 3
+
+    0 $accept: expr • $end
+    1 expr: expr • MAIS termo
+    2     | expr • MENOS termo
+
+    $end   shift, and go to state 6
+    MAIS   shift, and go to state 7
+    MENOS  shift, and go to state 8
+
+
+State 4
+
+    3 expr: termo •
+    4 termo: termo • ASTERISCO fator
+    5      | termo • DIV fator
+
+    ASTERISCO  shift, and go to state 9
+    DIV        shift, and go to state 10
+
+    $default  reduce using rule 3 (expr)
+
+
+State 5
+
+    6 termo: fator •
+
+    $default  reduce using rule 6 (termo)
+
+
+State 6
+
+    0 $accept: expr $end •
+
+    $default  accept
+
+
+State 7
+
+    1 expr: expr MAIS • termo
+
+    IDENTA  shift, and go to state 1
+    IDENTB  shift, and go to state 2
+
+    termo  go to state 11
+    fator  go to state 5
+
+
+State 8
+
+    2 expr: expr MENOS • termo
+
+    IDENTA  shift, and go to state 1
+    IDENTB  shift, and go to state 2
+
+    termo  go to state 12
+    fator  go to state 5
+
+
+State 9
+
+    4 termo: termo ASTERISCO • fator
+
+    IDENTA  shift, and go to state 1
+    IDENTB  shift, and go to state 2
+
+    fator  go to state 13
+
+
+State 10
+
+    5 termo: termo DIV • fator
+
+    IDENTA  shift, and go to state 1
+    IDENTB  shift, and go to state 2
+
+    fator  go to state 14
+
+
+State 11
+
+    1 expr: expr MAIS termo •
+    4 termo: termo • ASTERISCO fator
+    5      | termo • DIV fator
+
+    ASTERISCO  shift, and go to state 9
+    DIV        shift, and go to state 10
+
+    $default  reduce using rule 1 (expr)
+
+
+State 12
+
+    2 expr: expr MENOS termo •
+    4 termo: termo • ASTERISCO fator
+    5      | termo • DIV fator
+
+    ASTERISCO  shift, and go to state 9
+    DIV        shift, and go to state 10
+
+    $default  reduce using rule 2 (expr)
+
+
+State 13
+
+    4 termo: termo ASTERISCO fator •
+
+    $default  reduce using rule 4 (termo)
+
+
+State 14
+
+    5 termo: termo DIV fator •
+
+    $default  reduce using rule 5 (termo)

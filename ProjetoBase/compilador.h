@@ -12,6 +12,9 @@
  * ------------------------------------------------------------------- */
 
 #define TAM_TOKEN 16
+#define TAM_ATTRS 10
+#define INTEIRO 66
+#define BOOLEANO 77
 
 typedef enum simbolos {
   simb_program, simb_label, simb_type, simb_array, simb_of, simb_var, simb_begin, simb_end,
@@ -22,7 +25,14 @@ typedef enum simbolos {
   simb_atribuicao, simb_abre_parenteses, simb_fecha_parenteses,
 } simbolos;
 
-
+//Estrutura tabela de simbolos
+typedef struct tab_simbolos{
+  int chave;
+  char ident[TAM_TOKEN];
+  simbolos categoria;
+  int atributos[TAM_ATTRS];
+  struct tab_simbolos *prox;
+}tab_simbolos;
 
 /* -------------------------------------------------------------------
  * variáveis globais
@@ -34,6 +44,8 @@ extern int nivel_lexico;
 extern int desloc;
 extern int nl;
 
+extern tab_simbolos *topo_TS;
+extern int cont_TS;
 
 /* -------------------------------------------------------------------
  * prototipos globais
@@ -42,3 +54,10 @@ extern int nl;
 void geraCodigo (char*, char*);
 int yylex();
 void yyerror(const char *s);
+
+//Operações básicas para a tabela de símbolos
+void init_ts();
+void insere_tab(char ident[TAM_TOKEN], simbolos categoria, int attrs[TAM_ATTRS]);
+int busca_tab(char ident[TAM_TOKEN]);
+void remove_tab(int n);
+void limpa_ts();

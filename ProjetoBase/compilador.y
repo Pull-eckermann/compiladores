@@ -10,7 +10,11 @@
 #include <string.h>
 #include "compilador.h"
 
-int num_vars;
+int cont_amem;
+int nivel_lexico = 0;
+int desloc = 0;
+tab_simbolos *topo_TS;
+int cont_TS;
 
 %}
 
@@ -23,14 +27,10 @@ int num_vars;
 
 %%
 
-programa    :{
-             geraCodigo (NULL, "INPP");
-             }
+programa    :{geraCodigo (NULL, "INPP");}
              PROGRAM IDENT
              ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
-             bloco PONTO {
-             geraCodigo (NULL, "PARA");
-             }
+             bloco PONTO {geraCodigo (NULL, "PARA");}
 ;
 
 bloco       :
@@ -39,10 +39,7 @@ bloco       :
               }
 
               comando_composto
-              ;
-
-
-
+;
 
 parte_declara_vars:  var
 ;
@@ -56,10 +53,17 @@ declara_vars: declara_vars declara_var
             | declara_var
 ;
 
-declara_var : { }
+declara_var : { cont_amem = 0;}
               lista_id_var DOIS_PONTOS
               tipo
-              { /* AMEM */
+              {
+               char amem[] = "AMEM ";
+               int size = snprintf(NULL, 0, "%d", cont_amem);
+               char* n_amem = malloc( size + 1 );
+               snprintf(n_amem, size +1, "%d", cont_amem); //Converts int to string
+               strcat (amem, n_amem); 
+               geraCodigo(NULL, amem);
+               cont_amem = 0;
               }
               PONTO_E_VIRGULA
 ;
@@ -68,8 +72,25 @@ tipo        : IDENT
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT
-              { /* insere �ltima vars na tabela de s�mbolos */ }
-            | IDENT { /* insere vars na tabela de s�mbolos */}
+              {
+               desloc ++;
+               int attrs[TAM_ATTRS];
+               attrs[0] = nivel_lexico;
+               attrs[1] = desloc;
+               attrs[2] = INTEIRO;
+               insere_tab(token, simb_var, attrs);
+               cont_amem++;
+              }
+            | IDENT
+              {
+               desloc ++;
+               int attrs[TAM_ATTRS];
+               attrs[0] = nivel_lexico;
+               attrs[1] = desloc;
+               attrs[2] = INTEIRO;
+               insere_tab(token, simb_var, attrs);
+               cont_amem++;
+              }
 ;
 
 lista_idents: lista_idents VIRGULA IDENT
@@ -104,9 +125,11 @@ int main (int argc, char** argv) {
 /* -------------------------------------------------------------------
  *  Inicia a Tabela de S�mbolos
  * ------------------------------------------------------------------- */
+   init_ts();
 
    yyin=fp;
    yyparse();
 
+   limpa_ts();
    return 0;
 }

@@ -3,7 +3,7 @@
 #include <stdio.h>
 %}
 
-%token IDENT MAIS MENOS OR AND ASTERISCO DIV
+%token IDENTA IDENTB MAIS MENOS OR AND ASTERISCO DIV
 
 %%
 
@@ -20,8 +20,8 @@ termo      : termo ASTERISCO fator  {printf ("*"); }|
              fator
 ;
 
-fator      : IDENT {printf ("A"); } |
-             IDENT {printf ("B"); }
+fator      : IDENTA {printf ("A"); } |
+             IDENTB {printf ("B"); }
 ;
 
 %%
