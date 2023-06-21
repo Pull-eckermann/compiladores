@@ -12,40 +12,38 @@
 
 int cont_amem;
 int nivel_lexico = 0;
-int desloc = 0;
-tab_simbolos *topo_TS;
-int cont_TS;
+int desloc;
+int tam_TS;
+tab_simbolos* topo_TS;  // Ponteiro para o topo da tabela de simbolos
+tab_simbolos* var_attr; // Ponteiro para a variável que receberá valor
 
 %}
 
-%token PROGRAM ABRE_PARENTESES FECHA_PARENTESES
-%token LABEL TYPE ARRAY OF PROCEDURE FUNCTION GOTO
+%token PROGRAM LABEL ABRE_PARENTESES FECHA_PARENTESES
+%token TYPE ARRAY OF PROCEDURE FUNCTION GOTO
 %token IF THEN ELSE WHILE DO
 %token SOMA SUBTRAI MULT DIV AND OR NOT
+%token IGUAL DIFERE MENOR MENOR_IGUAL MAIOR MAIOR_IGUAL
 %token VIRGULA PONTO_E_VIRGULA DOIS_PONTOS PONTO
-%token T_BEGIN T_END VAR IDENT ATRIBUICAO
+%token T_BEGIN T_END VAR IDENT ATRIBUICAO NUM
 
 %%
 
-programa    :{geraCodigo (NULL, "INPP");}
-             PROGRAM IDENT
-             ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
-             bloco PONTO {geraCodigo (NULL, "PARA");}
+programa    : {geraCodigo (NULL, "INPP");}
+              PROGRAM IDENT
+              ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
+              bloco PONTO {geraCodigo (NULL, "PARA");}
 ;
 
-bloco       :
-              parte_declara_vars
-              {
-              }
-
+bloco       : parte_declara_vars
+              {}
               comando_composto
 ;
 
 parte_declara_vars:  var
 ;
 
-
-var         : { } VAR declara_vars
+var         : {desloc = -1;} VAR declara_vars
             |
 ;
 
@@ -69,27 +67,42 @@ declara_var : { cont_amem = 0;}
 ;
 
 tipo        : IDENT
+              {
+               int aux = cont_amem;
+               tab_simbolos* walker = topo_TS;
+               while(aux != 0){
+                  if(strcmp(token, "integer") == 0)
+                     walker->atributos[2] = INTEIRO;
+                  else
+                     if(strcmp(token, "boolean") == 0)
+                        walker->atributos[2] = BOOLEANO;
+                     else{
+                        printf("Tipo %s inválido\n", token);
+                        exit (0);
+                     }
+                  aux--;
+                  walker = walker->prox;
+               }
+              }
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT
               {
                desloc ++;
+               cont_amem++;
                int attrs[TAM_ATTRS];
                attrs[0] = nivel_lexico;
                attrs[1] = desloc;
-               attrs[2] = INTEIRO;
                insere_tab(token, simb_var, attrs);
-               cont_amem++;
               }
             | IDENT
               {
                desloc ++;
+               cont_amem++;
                int attrs[TAM_ATTRS];
                attrs[0] = nivel_lexico;
                attrs[1] = desloc;
-               attrs[2] = INTEIRO;
                insere_tab(token, simb_var, attrs);
-               cont_amem++;
               }
 ;
 
@@ -99,10 +112,138 @@ lista_idents: lista_idents VIRGULA IDENT
 
 
 comando_composto: T_BEGIN comandos T_END
-
-comandos:
 ;
 
+comandos: comandos comando 
+        | comando
+;
+
+comando: NUM DOIS_PONTOS comando_sem_rotulo
+       | comando_sem_rotulo
+;
+
+comando_sem_rotulo: atribuicao
+                  //| chama_proc
+                  //| desvio
+                  //| com_composto
+                  //| com_condicional
+                  //| com_repetitivo
+;
+
+atribuicao: IDENT
+            {  
+               var_attr = busca_tab(token);
+               if (var_attr == NULL){
+                  printf("Erro: variavel %s nao foi declarada\n", token);
+                  exit(0);
+               }
+               else{
+                  if (var_attr->categoria != simb_var){
+                     if (var_attr->categoria != simb_function){
+                        if (var_attr->categoria != simb_function){
+                           printf("Erro: Atribuicao somente para variaveis simples, parametros formais ou funcoes\n");
+                           exit(0);
+                        }
+                     }
+                  }
+               }
+            }
+            ATRIBUICAO expressao 
+            {
+               char armz[100];
+               sprintf(armz, "ARMZ %d,%d", var_attr->atributos[0], var_attr->atributos[1]);
+               geraCodigo(NULL, armz); // ARMZ nl,desloc
+               var_attr = NULL;  
+            }   
+            PONTO_E_VIRGULA
+;
+
+lista_expressoes: lista_expressoes VIRGULA expressao
+                | expressao
+;
+
+expressao: expressao_simples
+         | expressao_simples relacao expressao_simples
+;
+
+expressao_simples: termos_encadeados
+                 | SOMA termos_encadeados
+                 | SUBTRAI termos_encadeados
+;
+
+termos_encadeados: termos_encadeados SOMA termo
+                 | termos_encadeados SUBTRAI termo
+                 | termos_encadeados OR termo
+                 | termo
+;
+
+termo: termo MULT fator
+     | termo DIV fator
+     | termo AND fator
+     | fator
+;
+
+fator: variavel
+     | numero
+;
+
+variavel :  IDENT
+            {
+               tab_simbolos* var_tmp = busca_tab(token);
+               if (var_tmp == NULL){
+                  printf("Erro: variavel %s nao foi declarada\n", token);
+                  exit(0);
+               }
+               char crvl[100];
+               sprintf(crvl, "CRVL %d,%d", var_tmp->atributos[0], var_tmp->atributos[1]);
+               geraCodigo(NULL, crvl); // CRVL nl,desloc
+               var_tmp = NULL;
+            }
+         //|  IDENT lista_expressoes
+;
+
+numero:  NUM
+         {
+            char crct[] = "CRCT ";
+            strcat(crct, token);
+            geraCodigo(NULL, crct); // CRCT n
+         }
+;
+
+relacao: IGUAL {
+            geraCodigo(NULL, "CMIG");
+         }
+       | DIFERE{
+            geraCodigo(NULL, "CMDG");
+         }
+       | MENOR{
+            geraCodigo(NULL, "CMME");
+         }
+       | MENOR_IGUAL{
+            geraCodigo(NULL, "CMEG");
+         }
+       | MAIOR{
+            geraCodigo(NULL, "CMMA");
+         }
+       | MAIOR_IGUAL{
+            geraCodigo(NULL, "CMAG");
+         }
+;
+
+chama_proc:
+;
+
+desvio:
+;
+
+com_composto:
+;
+
+com_condicional:
+;
+
+com_repetitivo:
+;
 
 %%
 
@@ -131,5 +272,6 @@ int main (int argc, char** argv) {
    yyparse();
 
    limpa_ts();
+
    return 0;
 }

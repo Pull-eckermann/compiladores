@@ -147,6 +147,42 @@ do { simbolo  = simb_do;
           return MULT;
 }
 
+\== { simbolo  = simb_igual;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" igualdade ");
+          return IGUAL;
+}
+
+\<> { simbolo  = simb_difere;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" diferenca ");
+          return DIFERE;
+}
+
+\< { simbolo  = simb_menor;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" menor que ");
+          return MENOR;
+}
+
+\<= { simbolo  = simb_menorIgual;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" menor ou igual ");
+          return MENOR_IGUAL;
+}
+
+\> { simbolo  = simb_maior;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" maior que ");
+          return MAIOR;
+}
+
+\>= { simbolo  = simb_maiorIgual;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" maior ou igual ");
+          return MAIOR_IGUAL;
+}
+
 div { simbolo  = simb_div;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" divide ");
@@ -230,6 +266,12 @@ end { simbolo = simb_end;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" ident  ");
           return IDENT;
+}
+
+{numero} { simbolo = simb_numero;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" numero  ");
+          return NUM;
 }
         
 %%

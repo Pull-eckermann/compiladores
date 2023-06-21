@@ -46,27 +46,26 @@ int imprimeErro ( char* erro ) {
 
 void init_ts(){
   topo_TS = NULL;
-  cont_TS = 0;
+  tam_TS = 0;
 }
 
 void insere_tab(char ident[TAM_TOKEN], simbolos categoria, int attrs[TAM_ATTRS]){
-  cont_TS++;
   tab_simbolos *aux = malloc(sizeof(tab_simbolos));
-  aux->chave = cont_TS;
   strncpy (aux->ident, ident, TAM_TOKEN);
   aux->categoria = categoria;
   for(int i = 0; i < TAM_ATTRS; i++)
     aux->atributos[i] = attrs[i];
   aux->prox = topo_TS;
   topo_TS = aux;
+  tam_TS++;
 }
 
-int busca_tab(char ident[TAM_TOKEN]){
+tab_simbolos* busca_tab(char ident[TAM_TOKEN]){
   // Procura pelo simbolo com o identificador ident
   for(tab_simbolos *aux = topo_TS; aux != NULL; aux = aux->prox)
     if(strcmp(aux->ident, ident) == 0)
-      return aux->chave;
-  return 0; //Se não for encontrado retorna zero
+      return aux;
+  return NULL; //Se não for encontrado retorna NULL
 }
 
 void remove_tab(int n){
@@ -79,7 +78,7 @@ void remove_tab(int n){
     aux --;
   }
   topo_TS = aux2;
-  cont_TS = cont_TS - n;
+  tam_TS -= n;
 }
 
 void limpa_ts(){
@@ -90,5 +89,4 @@ void limpa_ts(){
     free(to_free);
   }
   topo_TS = NULL;
-  cont_TS = 0;
 }
