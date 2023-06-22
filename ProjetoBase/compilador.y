@@ -11,11 +11,15 @@
 #include "compilador.h"
 
 int cont_amem;
+int next_rot = 0;
 int nivel_lexico = 0;
 int desloc;
-int tam_TS;
+int tam_TS; //Conta o número de elementos na tabela de símbolos
 tab_simbolos* topo_TS;  // Ponteiro para o topo da tabela de simbolos
 tab_simbolos* var_attr; // Ponteiro para a variável que receberá valor
+
+pilha_tipos* topo_tipos = NULL; //Ponteiro para o topo da pilha de tipos
+pilha_rot* topo_rot = NULL;
 
 %}
 
@@ -27,6 +31,9 @@ tab_simbolos* var_attr; // Ponteiro para a variável que receberá valor
 %token VIRGULA PONTO_E_VIRGULA DOIS_PONTOS PONTO
 %token T_BEGIN T_END VAR IDENT ATRIBUICAO NUM
 
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
 %%
 
 programa    : {geraCodigo (NULL, "INPP");}
@@ -36,7 +43,6 @@ programa    : {geraCodigo (NULL, "INPP");}
 ;
 
 bloco       : parte_declara_vars
-              {}
               comando_composto
 ;
 
@@ -114,7 +120,7 @@ lista_idents: lista_idents VIRGULA IDENT
 comando_composto: T_BEGIN comandos T_END
 ;
 
-comandos: comandos comando 
+comandos: comandos PONTO_E_VIRGULA comando 
         | comando
 ;
 
@@ -126,9 +132,64 @@ comando_sem_rotulo: atribuicao
                   //| chama_proc
                   //| desvio
                   //| com_composto
-                  //| com_condicional
-                  //| com_repetitivo
+                  | com_condicional
+                  | com_repetitivo
 ;
+
+com_condicional:  if_then cond_else
+                  {
+                     char* rot = desempilhaRot();
+                     geraCodigo(rot, "NADA");
+                  }         
+;
+
+if_then: IF expressao 
+         {
+            char* rot = geraRotulo();
+            char dsvf[] = "DSVF ";
+            strcat(dsvf, rot);
+            geraCodigo(NULL, dsvf);
+            empilhaRot(rot);
+         }
+         THEN comando_sem_rotulo
+         {
+            char* rot = geraRotulo();
+            char dsvs[] = "DSVS ";
+            strcat(dsvs, rot);
+            geraCodigo(NULL, dsvs);
+            char* rot2 = desempilhaRot();
+            geraCodigo(rot2, "NADA");
+            empilhaRot(rot);
+         }
+;
+
+cond_else   :  ELSE comando_sem_rotulo
+            |  %prec LOWER_THAN_ELSE
+;
+
+com_repetitivo:   WHILE 
+                  {
+                     char* rot = geraRotulo();
+                     geraCodigo(rot, "NADA");
+                     empilhaRot(rot);
+                  } 
+                  expressao DO
+                  {
+                     char* rot = geraRotulo();
+                     char dsvf[] = "DSVF ";
+                     strcat(dsvf, rot);
+                     geraCodigo(NULL, dsvf);
+                     empilhaRot(rot);
+                  }
+                  T_BEGIN comandos T_END
+                  {
+                     char* rot2 = desempilhaRot();
+                     char* rot1 = desempilhaRot();
+                     char dsvs[] = "DSVS ";
+                     strcat(dsvs, rot1);
+                     geraCodigo(NULL, dsvs);
+                     geraCodigo(rot2, "NADA");
+                  }
 
 atribuicao: IDENT
             {  
@@ -155,36 +216,36 @@ atribuicao: IDENT
                geraCodigo(NULL, armz); // ARMZ nl,desloc
                var_attr = NULL;  
             }   
-            PONTO_E_VIRGULA
 ;
 
 lista_expressoes: lista_expressoes VIRGULA expressao
                 | expressao
 ;
 
-expressao: expressao_simples
-         | expressao_simples relacao expressao_simples
+expressao:  expressao_simples IGUAL expressao_simples { geraCodigo(NULL, "CMIG"); }
+         |  expressao_simples DIFERE expressao_simples { geraCodigo(NULL, "CMDG"); }
+         |  expressao_simples MENOR expressao_simples { geraCodigo(NULL, "CMME"); }
+         |  expressao_simples MENOR_IGUAL expressao_simples { geraCodigo(NULL, "CMEG"); }
+         |  expressao_simples MAIOR expressao_simples { geraCodigo(NULL, "CMMA"); }
+         |  expressao_simples MAIOR_IGUAL expressao_simples { geraCodigo(NULL, "CMAG"); }
+         |  expressao_simples
 ;
 
-expressao_simples: termos_encadeados
-                 | SOMA termos_encadeados
-                 | SUBTRAI termos_encadeados
-;
-
-termos_encadeados: termos_encadeados SOMA termo
-                 | termos_encadeados SUBTRAI termo
-                 | termos_encadeados OR termo
+expressao_simples: expressao_simples SOMA termo { geraCodigo(NULL, "SOMA"); }
+                 | expressao_simples SUBTRAI termo { geraCodigo(NULL, "SUBT"); }
+                 | expressao_simples OR termo { geraCodigo(NULL, "DISJ"); }
                  | termo
 ;
 
-termo: termo MULT fator
-     | termo DIV fator
-     | termo AND fator
+termo: termo MULT fator { geraCodigo(NULL, "MULT"); }
+     | termo DIV fator { geraCodigo(NULL, "DIVI"); }
+     | termo AND fator { geraCodigo(NULL, "CONJ"); }
      | fator
 ;
 
 fator: variavel
      | numero
+     | ABRE_PARENTESES expressao FECHA_PARENTESES
 ;
 
 variavel :  IDENT
@@ -197,6 +258,10 @@ variavel :  IDENT
                char crvl[100];
                sprintf(crvl, "CRVL %d,%d", var_tmp->atributos[0], var_tmp->atributos[1]);
                geraCodigo(NULL, crvl); // CRVL nl,desloc
+               //if(var_tmp->atributos[2] == INTEIRO)
+               //   empilha("variavel", t_inteiro);
+               //if(var_tmp->atributos[2] == BOOLEANO)
+               //   empilha("variavel", t_booleano);
                var_tmp = NULL;
             }
          //|  IDENT lista_expressoes
@@ -204,29 +269,10 @@ variavel :  IDENT
 
 numero:  NUM
          {
+            //empilha("numero", t_inteiro);
             char crct[] = "CRCT ";
             strcat(crct, token);
             geraCodigo(NULL, crct); // CRCT n
-         }
-;
-
-relacao: IGUAL {
-            geraCodigo(NULL, "CMIG");
-         }
-       | DIFERE{
-            geraCodigo(NULL, "CMDG");
-         }
-       | MENOR{
-            geraCodigo(NULL, "CMME");
-         }
-       | MENOR_IGUAL{
-            geraCodigo(NULL, "CMEG");
-         }
-       | MAIOR{
-            geraCodigo(NULL, "CMMA");
-         }
-       | MAIOR_IGUAL{
-            geraCodigo(NULL, "CMAG");
          }
 ;
 

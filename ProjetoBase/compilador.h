@@ -13,6 +13,9 @@
 
 #define TAM_TOKEN 16
 #define TAM_ATTRS 10
+#define TAM_REGRA 20
+#define TAM_ROT 10
+
 #define INTEIRO 66
 #define BOOLEANO 77
 
@@ -26,6 +29,10 @@ typedef enum simbolos {
   simb_atribuicao, simb_abre_parenteses, simb_fecha_parenteses,
 } simbolos;
 
+typedef enum tipos{
+  t_inteiro, t_booleano
+}tipos;
+
 //Estrutura tabela de simbolos
 typedef struct tab_simbolos{
   char ident[TAM_TOKEN];
@@ -33,6 +40,19 @@ typedef struct tab_simbolos{
   int atributos[TAM_ATTRS];
   struct tab_simbolos *prox;
 }tab_simbolos;
+
+//Estrutura da pilha de tipos
+typedef struct pilha_tipos{
+  char regra[TAM_REGRA];
+  tipos tipo;
+  struct pilha_tipos* prox;
+}pilha_tipos;
+
+//Estrutura da pilha de rotulos
+typedef struct pilha_rot{
+  char rotulo[TAM_ROT];
+  struct pilha_rot* prox;
+}pilha_rot;
 
 /* -------------------------------------------------------------------
  * variáveis globais
@@ -46,6 +66,10 @@ extern int nl;
 
 extern tab_simbolos *topo_TS;
 extern int tam_TS;
+
+extern pilha_tipos* topo_tipos;
+extern pilha_rot* topo_rot;
+extern int next_rot;
 
 /* -------------------------------------------------------------------
  * prototipos globais
@@ -61,3 +85,11 @@ void insere_tab(char ident[TAM_TOKEN], simbolos categoria, int attrs[TAM_ATTRS])
 tab_simbolos* busca_tab(char ident[TAM_TOKEN]);
 void remove_tab(int n);
 void limpa_ts();
+
+//Operações para a pilha de tipos
+void empilha(char *new_regra, tipos tipo);
+tipos desempilha();
+
+char* geraRotulo();
+void empilhaRot(char* rotulo);
+char* desempilhaRot();

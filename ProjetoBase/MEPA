@@ -1,8 +1,14 @@
      INPP
      AMEM 2
-     AMEM 2
-     CRVL 0,0
-     CMME
      CRCT 0
      ARMZ 0,0
-     PARA
+R0: NADA 
+     CRVL 0,0
+     CRVL 0,1
+     CMME
+     DSVF R1
+     CRVL 0,0
+     CRCT 2
+     DIVI
+     CRCT 2
+     MULT

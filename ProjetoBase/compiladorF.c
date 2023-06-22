@@ -49,6 +49,7 @@ void init_ts(){
   tam_TS = 0;
 }
 
+//Operações básicas para a tabela de símbolos
 void insere_tab(char ident[TAM_TOKEN], simbolos categoria, int attrs[TAM_ATTRS]){
   tab_simbolos *aux = malloc(sizeof(tab_simbolos));
   strncpy (aux->ident, ident, TAM_TOKEN);
@@ -89,4 +90,54 @@ void limpa_ts(){
     free(to_free);
   }
   topo_TS = NULL;
+}
+
+//Operações para a pilha de tipos
+void empilha(char *new_regra, tipos tipo){
+  pilha_tipos* aux = malloc(sizeof(pilha_tipos));
+  strncpy (aux->regra, new_regra, TAM_REGRA);
+  aux->tipo = tipo;
+  aux->prox = topo_tipos;
+  topo_tipos = aux;
+}
+
+tipos desempilha(){
+  tipos retorno = 0;
+  if(topo_tipos == NULL)
+    printf("A pilha de tipos esta vazia\n");
+  else{
+    pilha_tipos *aux = topo_tipos;
+    topo_tipos = aux->prox;
+    retorno = aux->tipo;
+    free(aux);
+  }
+  return retorno;
+}
+
+char* geraRotulo(){
+  char * rot = malloc(sizeof(TAM_ROT));
+  sprintf(rot, "R%d", next_rot);
+  next_rot++;
+  return rot;
+}
+
+void empilhaRot(char* rotulo){
+  pilha_rot* aux = malloc(sizeof(pilha_rot));
+  strncpy (aux->rotulo, rotulo, TAM_ROT);
+  aux->prox = topo_rot;
+  topo_rot = aux;
+}
+
+char* desempilhaRot(){
+  if(topo_rot == NULL)
+    printf("A pilha de rótulos esta vazia\n");
+  else{
+    pilha_rot *aux = topo_rot;
+    topo_rot = aux->prox;
+    char *retorno = malloc(sizeof(TAM_ROT));
+    strncpy(retorno, aux->rotulo, TAM_ROT);
+    free(aux);
+    return retorno;
+  }
+  return 0;
 }
